@@ -12,8 +12,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.devsuperior.dscatalog.dto.CategoryDTO;
 import com.devsuperior.dscatalog.dto.ProductDTO;
+import com.devsuperior.dscatalog.entities.Category;
 import com.devsuperior.dscatalog.entities.Product;
+import com.devsuperior.dscatalog.repositories.CategoryRepository;
 import com.devsuperior.dscatalog.repositories.ProductRepository;
 import com.devsuperior.dscatalog.services.exceptions.DataBaseException;
 import com.devsuperior.dscatalog.services.exceptions.ResourceNotFoundException;
@@ -23,6 +26,9 @@ public class ProductService {
 	
 	@Autowired
 	private ProductRepository productRepository;
+	
+	@Autowired
+	private CategoryRepository categoryRepository;
 	
 	@Transactional(readOnly = true)
 	public Page<ProductDTO> findAllPaged(PageRequest pageRequest){
@@ -63,7 +69,7 @@ public class ProductService {
 	@Transactional
 	public ProductDTO insert(ProductDTO productDto) {
 		Product entityProduct = new Product();
-		//entityProduct.setName(productDto.getName());
+		copyDtoToEntity(productDto, entityProduct);
 		entityProduct = productRepository.save(entityProduct);
 		return new ProductDTO(entityProduct);
 	}
@@ -72,7 +78,7 @@ public class ProductService {
 	public ProductDTO update(Long id, ProductDTO productDto) {
 		try {
 			Product entityProduct = productRepository.getOne(id);
-			//entityProduct.setName(productDto.getName());
+			copyDtoToEntity(productDto, entityProduct);
 			entityProduct = productRepository.save(entityProduct);
 			return new ProductDTO(entityProduct);		
 		}
@@ -90,6 +96,20 @@ public class ProductService {
 		}
 		catch (DataIntegrityViolationException e){
 			throw new DataBaseException("Integrity violation");
+		}
+	}
+	
+	private void copyDtoToEntity(ProductDTO productDto, Product entityProduct) {
+		entityProduct.setName(productDto.getName());
+		entityProduct.setDescription(productDto.getDescription());
+		entityProduct.setDate(productDto.getDate());
+		entityProduct.setImgUrl(productDto.getImgUrl());
+		entityProduct.setPrice(productDto.getPrice());
+		
+		entityProduct.getCategories().clear();
+		for (CategoryDTO categoryDTO : productDto.getCategories()) {
+			Category entityCategory = categoryRepository.getOne(categoryDTO.getId());
+			entityProduct.getCategories().add(entityCategory);
 		}
 	}
 }
