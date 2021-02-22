@@ -1,4 +1,4 @@
-import './core/assets/styles/custom.scss';
+import 'core/assets/styles/custom.scss';
 import './app.scss';
 import Routes from './Routes';
 
